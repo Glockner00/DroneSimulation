@@ -22,21 +22,30 @@ public class DronePhysics : MonoBehaviour
 
     void FixedUpdate()
     {
-        //Update position and rotation each frame
+        // --- Thrust force ---
+        // For now, constant thrust (rotorspeed) TODO: variable thrust
+
+        // T = k_T * w^2 = 9.81 -> thrust must be 9.81 N to hover
+        // => k_t = 1 then w = 3.13 rad/s => slowly sinks due to drag 
+        float simulatedRotorSpeed = 3.13f;
+        float thrust = thrustCoefficient * simulatedRotorSpeed * simulatedRotorSpeed;
+
+        // Thrust always points up in the drone's local Z axis → convert to world space
+        Vector3 thrustForce = transform.up * thrust;
+
+        // --- Gravity and drag ---
+        Vector3 gravity = new Vector3(0, -9.81f, 0);    // Gravity force
+        Vector3 drag = -dragCoefficient * velocity;     // Drag force
+   
+        // --- Total acceleration ---
+        Vector3 acceleration = (gravity * mass + thrustForce + drag) / mass;
+
+        // --- Integrate motion ---
+        velocity += acceleration * Time.fixedDeltaTime; // Integrate velocity
+        position += velocity * Time.fixedDeltaTime;     // Integrate position
+
+        // --- Update Transform ---
         transform.position = position;
         transform.rotation = rotation;
-
-        // Gravity force
-        Vector3 gravity = new Vector3(0, -9.81f, 0);
-
-        // Acceleration from gravity
-        Vector3 acceleration = gravity;
-
-        // Integrate velocity
-        velocity += acceleration * Time.fixedDeltaTime;
-
-        // Integrate position
-        position += velocity * Time.fixedDeltaTime;
-
-    }
+        }
 }
